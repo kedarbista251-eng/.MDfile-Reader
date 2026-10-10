@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "LightMD - Lightweight Markdown Reader",
+  "version": "1.0.0",
+  "description": "Ultra-fast, beautiful reader for markdown documents with Table of Contents, Math equations, Mermaid diagrams, and reading themes.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "LightMD Reader"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "favicon.svg",
+    "48": "favicon.svg",
+    "128": "favicon.svg"
+  }
+}
