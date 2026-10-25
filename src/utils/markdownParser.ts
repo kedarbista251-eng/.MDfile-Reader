@@ -49,7 +49,7 @@ export function calculateStats(markdown: string): DocumentStats {
   const cleanText = markdown
     .replace(/```[\s\S]*?```/g, '') // remove code blocks
     .replace(/<[^>]*>/g, '') // remove HTML
-    .replace(/[#*`~_\[\]()]/g, ' ') // remove markdown syntax
+    .replace(/[#*`~_[\]()]/g, ' ') // remove markdown syntax
     .trim();
 
   const words = cleanText ? cleanText.split(/\s+/).filter(Boolean).length : 0;
@@ -81,7 +81,7 @@ function processMath(markdown: string): { processed: string; mathMap: Map<string
   });
 
   // Process Inline Math: $ ... $ (ensuring not matched with currency or empty spaces)
-  processed = processed.replace(/(?<!\\)\$([^\$\n]+?)\$(?!\$)/g, (_match, formula) => {
+  processed = processed.replace(/(?<!\\)\$([^$\n]+?)\$(?!\$)/g, (_match, formula) => {
     // Skip if empty or starts/ends with space
     if (!formula.trim() || formula.startsWith(' ') || formula.endsWith(' ')) {
       return _match;

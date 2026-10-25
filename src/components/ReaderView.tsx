@@ -5,21 +5,30 @@ import type { ReaderSettings, TocHeading } from '../types';
 interface ReaderViewProps {
   htmlContent: string;
   settings: ReaderSettings;
-  headings: TocHeading[];
-  onActiveHeadingChange: (id: string) => void;
-  scrollTargetId: string | null;
-  onClearScrollTarget: () => void;
+  headings?: TocHeading[];
+  onActiveHeadingChange?: (id: string) => void;
+  scrollTargetId?: string | null;
+  onClearScrollTarget?: () => void;
+  viewportId?: string;
+  hideProgressBar?: boolean;
+  onScrollContainer?: (e: React.UIEvent<HTMLDivElement>) => void;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const ReaderView: React.FC<ReaderViewProps> = ({
   htmlContent,
   settings,
-  headings,
+  headings = [],
   onActiveHeadingChange,
   scrollTargetId,
   onClearScrollTarget,
+  viewportId = 'reader-viewport',
+  hideProgressBar = false,
+  onScrollContainer,
+  scrollContainerRef,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const localContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = scrollContainerRef || localContainerRef;
   const articleRef = useRef<HTMLElement>(null);
   const [readingProgress, setReadingProgress] = useState(0);
 
@@ -43,7 +52,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         const rawEncoded = container.getAttribute('data-mermaid');
         if (!rawEncoded) return;
         const code = decodeURIComponent(rawEncoded);
-        const uniqueId = `mermaid-render-${Date.now()}-${index}`;
+        const uniqueId = `mermaid-${viewportId}-${Date.now()}-${Math.floor(Math.random() * 1000)}-${index}`;
 
         try {
           const { svg } = await mermaid.render(uniqueId, code);
@@ -56,7 +65,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     } catch (e) {
       console.error('Failed to initialize mermaid:', e);
     }
-  }, [htmlContent, settings.theme]);
+  }, [htmlContent, settings.theme, viewportId]);
 
   // Attach click listener for code copy buttons
   useEffect(() => {
@@ -107,12 +116,14 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     const element = containerRef.current.querySelector<HTMLElement>(`#${CSS.escape(scrollTargetId)}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      onClearScrollTarget();
+      onClearScrollTarget?.();
     }
-  }, [scrollTargetId, onClearScrollTarget]);
+  }, [scrollTargetId, onClearScrollTarget, containerRef]);
 
   // ScrollSpy and reading progress tracking
-  const handleScroll = () => {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    onScrollContainer?.(e);
+
     const container = containerRef.current;
     if (!container) return;
 
@@ -122,7 +133,7 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
     setReadingProgress(Math.min(100, Math.max(0, progress)));
 
     // Detect currently visible heading
-    if (headings.length > 0) {
+    if (headings.length > 0 && onActiveHeadingChange) {
       let currentActive = headings[0].id;
       for (const heading of headings) {
         const el = container.querySelector<HTMLElement>(`#${CSS.escape(heading.id)}`);
@@ -145,15 +156,17 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   return (
     <>
       {/* Top progress bar */}
-      <div className="reading-progress-track">
-        <div className="reading-progress-bar" style={{ width: `${readingProgress}%` }} />
-      </div>
+      {!hideProgressBar && (
+        <div className="reading-progress-track">
+          <div className="reading-progress-bar" style={{ width: `${readingProgress}%` }} />
+        </div>
+      )}
 
       <div
         className="reader-scroll-container"
         ref={containerRef}
         onScroll={handleScroll}
-        id="reader-viewport"
+        id={viewportId}
       >
         <article
           ref={articleRef}

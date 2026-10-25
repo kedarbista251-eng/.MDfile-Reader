@@ -33,6 +33,18 @@ export interface SampleDoc {
   markdown: string;
 }
 
+export type DocSource = 'local' | 'gdrive' | 'url' | 'sample';
+
+export interface OpenDoc {
+  id: string;
+  title: string;
+  markdown: string;
+  source: DocSource;
+  sourceUrl?: string;
+  lastModified?: number;
+  chapterNumber?: number;
+}
+
 // Global Chrome Extension namespace declaration
 declare global {
   const chrome: any;
